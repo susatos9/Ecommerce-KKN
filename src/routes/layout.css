@@ -1,0 +1,269 @@
+@import 'tailwindcss';
+
+@font-face {
+	font-family: 'Geist:Regular';
+	src: url('https://static.figma.com/font/Geist_wght__1') format('woff2');
+	font-style: normal;
+	font-weight: 400;
+}
+
+@font-face {
+	font-family: 'Geist:Light';
+	src: url('https://static.figma.com/font/Geist_wght__1') format('woff2');
+	font-style: normal;
+	font-weight: 300;
+}
+
+@font-face {
+	font-family: 'Geist:Medium';
+	src: url('https://static.figma.com/font/Geist_wght__1') format('woff2');
+	font-style: normal;
+	font-weight: 500;
+}
+
+@font-face {
+	font-family: 'Geist:SemiBold';
+	src: url('https://static.figma.com/font/Geist_wght__1') format('woff2');
+	font-style: normal;
+	font-weight: 600;
+}
+
+@font-face {
+	font-family: 'Geist:Bold';
+	src: url('https://static.figma.com/font/Geist_wght__1') format('woff2');
+	font-style: normal;
+	font-weight: 700;
+}
+
+@font-face {
+	font-family: 'Inter:Semi Bold';
+	src: url('https://static.figma.com/font/Inter_1') format('woff2');
+	font-style: normal;
+	font-weight: 600;
+}
+
+@font-face {
+	font-family: 'Roboto:Regular';
+	src: url('https://static.figma.com/font/Roboto_wdth_wght__3') format('woff2');
+	font-style: normal;
+	font-weight: 400;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+	background: white;
+	color: #0a0a0a;
+	font-family: 'Geist:Regular', Arial, sans-serif;
+}
+
+button,
+a {
+	-webkit-tap-highlight-color: transparent;
+}
+
+button {
+	font: inherit;
+}
+
+.shopix-page {
+	overflow-x: clip;
+}
+
+.shopix-page .w-\[1280px\],
+.commerce-app .w-\[1280px\] {
+	width: min(1280px, 100%);
+}
+
+.commerce-app > div {
+	min-height: 100vh;
+	overflow-x: clip;
+}
+
+.commerce-app [data-name='Menu Item'],
+.commerce-app [data-name='Solid button'],
+.commerce-app [data-name='Logo'],
+.commerce-app [data-name='shopix-logo'] {
+	cursor: pointer;
+}
+
+/* Universal responsive layout overrides for mobile & tablet */
+.commerce-app {
+	width: 100%;
+	overflow-x: hidden;
+}
+
+.commerce-app [data-name='Navbar Container'] {
+	max-width: 100% !important;
+}
+
+@media (max-width: 1024px) {
+	.commerce-app [data-name='Navbar Container'] {
+		padding-inline: 16px !important;
+		gap: 16px !important;
+	}
+
+	/* Two-column splits adapt to stacked */
+	.commerce-app [data-name='Flex Horizontal'] {
+		flex-wrap: wrap;
+	}
+
+	.commerce-app [data-name='User Profile Sidebar'] {
+		width: 100% !important;
+	}
+
+	.commerce-app [data-name='User Profile Sidebar'] > div {
+		width: 100% !important;
+		height: auto !important;
+	}
+
+	.commerce-app [data-name='Product overview'],
+	.commerce-app [data-name='Category filter'],
+	.commerce-app [data-name='Checkout'],
+	.commerce-app [data-name='Feature'],
+	.commerce-app [data-name='Category'],
+	.commerce-app [data-name='Hero'] {
+		padding-inline: 16px !important;
+	}
+}
+
+@media (max-width: 768px) {
+	/* Header sub-navigation row */
+	.commerce-app [data-name='Row'] {
+		display: none !important;
+	}
+
+	.commerce-app [data-name='Default Input'] {
+		display: none !important;
+	}
+
+	/* Footer value props stack nicely */
+	.commerce-app [data-name='Footer'] > div:first-child {
+		flex-direction: column !important;
+		gap: 12px !important;
+		padding-inline: 16px !important;
+	}
+
+	.commerce-app [data-name='Footer'] [data-name='Card'] {
+		width: 100% !important;
+	}
+
+	/* Footer columns stack */
+	.commerce-app [data-name='Footer'] [data-name='Flex Horizontal'] {
+		flex-direction: column !important;
+		gap: 24px !important;
+	}
+
+	/* Product grid cards scale flexibly */
+	.commerce-app [data-name='Product Card'],
+	.commerce-app [data-name='Card'] {
+		max-width: 100% !important;
+	}
+
+	/* Cart & Checkout pages */
+	.commerce-app [data-name='Checkout'] > div {
+		flex-direction: column !important;
+		padding-inline: 16px !important;
+	}
+
+	.commerce-app [data-name='Steps Horizontal'] {
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	.commerce-app [data-name='Pricing Details'],
+	.commerce-app .w-\[678px\],
+	.commerce-app .w-\[522px\],
+	.commerce-app .w-\[586px\],
+	.commerce-app .w-\[548px\] {
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	/* Product details layout */
+	.commerce-app [data-name='Phone case image'],
+	.commerce-app [data-node-id='I1:21686;31919:11168'] {
+		flex-direction: column !important;
+		padding-inline: 16px !important;
+	}
+
+	.commerce-app [data-node-id='I1:21686;31919:11169'] {
+		width: 100% !important;
+		height: auto !important;
+		min-width: 0 !important;
+	}
+
+	/* Form & Auth cards */
+	.commerce-app [data-name='Card Body'],
+	.commerce-app [data-name='Auth Card'],
+	.commerce-app [data-name='Login Card'],
+	.commerce-app [data-name='Signup Card'] {
+		width: 100% !important;
+		max-width: 100% !important;
+		padding-inline: 16px !important;
+	}
+
+	/* Category icons horizontal scroller */
+	.commerce-app [data-name='Category'] [data-name='Flex Horizontal']:last-child {
+		display: flex !important;
+		flex-direction: row !important;
+		overflow-x: auto !important;
+		scroll-snap-type: x mandatory !important;
+		padding-bottom: 12px !important;
+		gap: 16px !important;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.commerce-app [data-name='Category'] [data-name='Arrow Icon'] {
+		display: none !important;
+	}
+
+	.commerce-app [data-name='Category'] [data-name='Flex Vertical'] {
+		min-width: 110px !important;
+		flex-shrink: 0 !important;
+		scroll-snap-align: start;
+	}
+
+	/* Feature / Deals of the day */
+	.commerce-app [data-name='Feature'] [data-name='Flex Horizontal']:last-child {
+		flex-direction: column !important;
+		gap: 16px !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.commerce-app h1,
+	.commerce-app .text-\[36px\],
+	.commerce-app .text-\[30px\] {
+		font-size: 24px !important;
+		line-height: 32px !important;
+	}
+
+	.commerce-app .text-\[28px\] {
+		font-size: 20px !important;
+		line-height: 26px !important;
+	}
+
+	.commerce-app .px-\[32px\] {
+		padding-left: 14px !important;
+		padding-right: 14px !important;
+	}
+
+	.commerce-app .py-\[56px\],
+	.commerce-app .py-\[96px\] {
+		padding-top: 36px !important;
+		padding-bottom: 36px !important;
+	}
+
+	.commerce-app [data-name='Timer Blocks'] {
+		min-width: 60px !important;
+	}
+}
