@@ -15,7 +15,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-bunx sv@0.17.1 create --template minimal --types ts --add prettier tailwindcss="plugins:none" sveltekit-adapter="adapter:static" --install bun ImplementPrototypeUI-svelte
+bunx sv@0.17.1 create --template minimal --types ts --add prettier tailwindcss="plugins:none" sveltekit-adapter="adapter:bun" --install bun ImplementPrototypeUI-svelte
 ```
 
 ## Developing
@@ -31,12 +31,24 @@ bun run dev --open
 
 ## Building
 
-To create a production version of your app:
+Requires Bun >= 1.4 (adapter-bun uses `Bun.build`). Build and run the production server:
 
 ```sh
-bun run build
+bun run --bun build
+bun ./build
 ```
 
-You can preview the production build with `bun run preview`.
+`bun run preview` is an alias for `bun ./build`. The server listens on port 3000 by default (`HOST` / `PORT` override it) and serves both the SPA shell and `/api/auth/*`.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Deploying
+
+Copy `build/`, `package.json`, and `bun.lock` to the server, install production dependencies, then start the server:
+
+```sh
+bun install --production --frozen-lockfile
+bun ./build
+```
+
+Set `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` in the environment. See `.env.example` for optional server and proxy settings. Run `bun run db:push` once to create the auth tables.
+
+When serving plain HTTP directly (for example a local preview), build with `ORIGIN=http://localhost:3000 bun run --bun build`; behind TLS, leave `ORIGIN` unset.
