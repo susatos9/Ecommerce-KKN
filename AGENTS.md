@@ -12,6 +12,7 @@ Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.
 - `bun run build` — production build to `build/` (verify the log ends with `Wrote site to "build"` + `✔ done`)
 - `bun run preview` — serve `build/` (SPA fallback works for every route)
 - `bun run check` — `svelte-kit sync` + `svelte-check` (must stay 0 errors / 0 warnings)
+- `bun run db:push` — `drizzle-kit push` against Turso (reads `TURSO_*` from `.env`)
 - `bun run lint` / `bun run format` — Prettier check / write (required before finishing)
 
 `bunfig.toml` sets `[run] bun = true`, so scripts and CLIs run under the Bun runtime instead of Node shebangs.
@@ -20,10 +21,12 @@ Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.
 
 - **No `svelte.config.ts`** — kit 3 rejects it (`kit/config_file_unsupported`). Config is inline in `vite.config.ts` via `sveltekit({ compilerOptions, adapter })`.
 - **`tsconfig.json` extends `"$app/tsconfig"`** (kit 3's preset: `paths: {}`, `types`, `noEmit`, `allowImportingTsExtensions`). Do not set `paths` for aliases. `compilerOptions.types` **replaces** the inherited array, so it must list both: `["$app/types", "bun"]` (the `bun` entry gives `bun:sqlite` / `Bun` global types to `src/lib/backend`).
+- **Env vars live in `src/env.ts`** (`defineEnvVars` from `@sveltejs/kit/env`) and are read as `$app/env/private` — kit 3 removed `$env/dynamic/private`. Bun does not forward its auto-loaded `.env` to child processes (`vite`), so `process.env` is not reliable inside the dev/build server; `drizzle.config.ts` is the exception (drizzle-kit loads `.env` itself).
 - **Path aliases live in `package.json` `imports`** (Node subpath imports, no `kit.alias`):
   - `#lib` → `./src/lib/index.ts`; `#lib/*` → `./src/lib/*`
   - `#backend/modules/*` → `./src/lib/backend/modules/*`
   - `#backend/database/*` → `./src/lib/backend/modules/database/*` (folds the old `@database/*` alias in)
+  - `#db` → `./src/lib/server/db/index.ts`; `#db/*` → `./src/lib/server/db/*` (Drizzle/Turso; better-auth reads it)
 - Import specifiers **must include the file extension** (`.ts`, `.svelte`) — TS 6 resolves subpath imports only with an explicit extension; directory imports need `/index.ts`. `rewriteRelativeImportExtensions` must stay off (it makes TS2877 an error on non-relative `.ts` imports).
 
 ## Project structure
@@ -36,14 +39,15 @@ Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.
 - `src/lib/frontend/components/ui/` — `Plus`, `Minus`, `Radio`, `Rating`, `Avatar`, `InputNumber`, `Pagination`
 - `src/lib/frontend/shellAssets.ts` — header/footer asset paths
 - `src/lib/frontend/modules/landing/` — landing-page sections (`HeroSection`, `BrandsSection`, …)
-- `src/lib/backend/` — Elysia + better-auth + `bun:sqlite` backend (type-checked by `bun run check`)
+- `src/lib/backend/` — better-auth config + hand-rolled `bun:sqlite` app tables (type-checked by `bun run check`)
+- `src/lib/server/db/` — Drizzle + Turso/libsql client and schema (better-auth tables; env comes from `src/env.ts` via `$app/env/private`); `bun run db:push` syncs it
 - `tools/convert.mjs` — JSX → Svelte converter (full-page and `--snippet` modes); strips `data-node-id`, keeps `data-name`, strips embedded `Header`/`Footer` sections
 - `tools/rewire.mjs` — CLI to wire real handlers: `button` / `buttonall` (div → `<button onclick={() => goto(path)}>`), `span`, `p`, `row` (nav rows → `<a>`), `tab` (`data-name="Tab item|0N"` → `<a>`)
 - `static/assets/` — 406 SVGs (+ PNG paths referenced as in the original, some intentionally missing/broken like the React app)
 
 ## Conventions
 
-- **Imports**: use `#lib/...` for app frontend code (e.g. `#lib/frontend/components/SiteHeader.svelte`) and `#backend/...` for backend code. No `$lib`, `@backend`, or `@database` specifiers remain.
+- **Imports**: use `#lib/...` for app frontend code (e.g. `#lib/frontend/components/SiteHeader.svelte`), `#backend/...` for backend code, and `#db` for the Drizzle instance. `src/lib/server/**` is SvelteKit's server-only guard. No `#lib`, `@backend`, or `@database` specifiers remain.
 - Idiomatic interactivity: real `<a href>` / `<button onclick>` (+ `goto` from `$app/navigation` for JS navigation). No global click delegation (the React app's `handlePageClick` label table in `App.tsx:1881-1942` is the acceptance checklist for what is wired, and which accidental skips are intentional: headings, radio option labels, stepper step labels in ReturnsRefunds, "Save changes" on checkout).
 - Every page renders `<SiteHeader />` right after its root div and `<SiteFooter />` (possibly `features`) right before the root close.
 - `data-node-id` is stripped everywhere except two elements on `/products/phone` (`I1:21686;31919:11168/11169`) which `layout.css` still needs for the mobile PDP layout.
@@ -52,3 +56,5 @@ Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.
 ## Verification
 
 `bun run check` (0/0), `bun run lint`, `bun run build` (log must end with `✔ done` — a silent mid-pipeline exit means Bun is < 1.4.2), then `bun run preview` and smoke-test all routes (all must return 200 via the SPA fallback; `/account` and `/checkout` are intentionally 404 — they have no `+page.svelte`, only subroutes). Compare interaction wiring against the React app on port 8443 (`../ImplementPrototypeUI`).
+
+Auth endpoints (`/api/auth/*`, served by better-auth through `src/hooks.server.ts`) only exist under `bun run dev`: the static adapter ships no server runtime, so `bun run preview` serves the SPA shell only and production auth requires switching to `adapter-node` (follow-up).
