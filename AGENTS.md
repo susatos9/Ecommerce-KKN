@@ -1,16 +1,16 @@
 # ImplementPrototypeUI-svelte
 
-SvelteKit 3 + Svelte 5 (runes) + Tailwind CSS v4 + TypeScript 6 strict reimplementation of the React/Vite prototype in `../ImplementPrototypeUI` (same folder name, sibling). Static SPA: `@sveltejs/adapter-static` with `fallback: 'index.html'`, `ssr = false`, `prerender = false` (see `src/routes/+layout.ts`).
+SvelteKit 3 + Svelte 5 (runes) + Tailwind CSS v4 + TypeScript 6 strict reimplementation of the React/Vite prototype in `../ImplementPrototypeUI` (same folder name, sibling). Bun server with CSR/SPA shell: `@sveltejs/adapter-bun`, `ssr = false`, `prerender = false` (see `src/routes/+layout.ts`). The server runtime serves the SPA shell and `/api/auth/*`.
 
 This app is self-contained: it has its own `package.json` and `bun.lock` in `web/` (the repo's root workspace entries for `backend`/`frontend` no longer exist).
 
 ## Commands
 
-Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.4.2** — Bun 1.3.9 has a `worker_threads` race (postMessage followed by `process.exit` in a worker drops the parent's exit event; [oven-sh/bun#14144](https://github.com/oven-sh/bun/issues/14144)) that makes `vite build` exit 0 silently in the middle of the pipeline (no `manifest.js`, stale `build/`).
+Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.4.2** — adapter-bun needs Bun >= 1.4, and Bun 1.3.9 has a `worker_threads` race (postMessage followed by `process.exit` in a worker drops the parent's exit event; [oven-sh/bun#14144](https://github.com/oven-sh/bun/issues/14144)) that makes `vite build` exit 0 silently in the middle of the pipeline (no `manifest.js`, stale `build/`).
 
 - `bun run dev` — dev server (default port 5173)
-- `bun run build` — production build to `build/` (verify the log ends with `Wrote site to "build"` + `✔ done`)
-- `bun run preview` — serve `build/` (SPA fallback works for every route)
+- `bun run --bun build` — production build to `build/` (must run under Bun because adapter-bun calls `Bun.build`; `bunfig.toml` also forces Bun for `bun run build`)
+- `bun run start` / `bun run preview` — serve the built app with `bun ./build` (default port 3000)
 - `bun run check` — `svelte-kit sync` + `svelte-check` (must stay 0 errors / 0 warnings)
 - `bun run db:push` — `drizzle-kit push` against Turso (reads `TURSO_*` from `.env`)
 - `bun run lint` / `bun run format` — Prettier check / write (required before finishing)
@@ -19,9 +19,9 @@ Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.
 
 ## Configuration (SvelteKit 3)
 
-- **No `svelte.config.ts`** — kit 3 rejects it (`kit/config_file_unsupported`). Config is inline in `vite.config.ts` via `sveltekit({ compilerOptions, adapter })`.
+- **No `svelte.config.ts`** — kit 3 rejects it (`kit/config_file_unsupported`). Config is inline in `vite.config.ts` via `sveltekit({ compilerOptions, adapter, paths })`. `paths.origin` is taken from the optional `ORIGIN` env var at build time; leave it empty behind TLS so adapter-bun can derive the host.
 - **`tsconfig.json` extends `"$app/tsconfig"`** (kit 3's preset: `paths: {}`, `types`, `noEmit`, `allowImportingTsExtensions`). Do not set `paths` for aliases. `compilerOptions.types` **replaces** the inherited array, so it must list both: `["$app/types", "bun"]` (the `bun` entry gives `bun:sqlite` / `Bun` global types to `src/lib/backend`).
-- **Env vars live in `src/env.ts`** (`defineEnvVars` from `@sveltejs/kit/env`) and are read as `$app/env/private` — kit 3 removed `$env/dynamic/private`. Bun does not forward its auto-loaded `.env` to child processes (`vite`), so `process.env` is not reliable inside the dev/build server; `drizzle.config.ts` is the exception (drizzle-kit loads `.env` itself).
+- **Env vars live in `src/env.ts`** (`defineEnvVars` from `@sveltejs/kit/env`) and are read as `$app/env/private` — kit 3 removed `$env/dynamic/private`, and `$env/static/private` is deprecated. Bun auto-loads `.env` for both `vite dev` and `bun --bun vite build`; `drizzle.config.ts` is the exception (drizzle-kit loads `.env` itself). `ORIGIN` is read from `process.env` in `vite.config.ts` at build time.
 - **Path aliases live in `package.json` `imports`** (Node subpath imports, no `kit.alias`):
   - `#lib` → `./src/lib/index.ts`; `#lib/*` → `./src/lib/*`
   - `#backend/modules/*` → `./src/lib/backend/modules/*`
@@ -55,6 +55,12 @@ Bun-only repo (no pnpm/npm). Run `bun install` from `web/`. Requires **Bun >= 1.
 
 ## Verification
 
-`bun run check` (0/0), `bun run lint`, `bun run build` (log must end with `✔ done` — a silent mid-pipeline exit means Bun is < 1.4.2), then `bun run preview` and smoke-test all routes (all must return 200 via the SPA fallback; `/account` and `/checkout` are intentionally 404 — they have no `+page.svelte`, only subroutes). Compare interaction wiring against the React app on port 8443 (`../ImplementPrototypeUI`).
+`bun run check` (0/0), `bun run lint`, `bun run --bun build` (log must end with `✔ done` — a silent mid-pipeline exit means Bun is < 1.4.2), then `bun run preview` and smoke-test all routes (known routes return 200 with the SPA shell; unknown paths such as `/account` and `/checkout` return 404 because they have no `+page.svelte`, only subroutes). Compare interaction wiring against the React app on port 8443 (`../ImplementPrototypeUI`).
 
-Auth endpoints (`/api/auth/*`, served by better-auth through `src/hooks.server.ts`) only exist under `bun run dev`: the static adapter ships no server runtime, so `bun run preview` serves the SPA shell only and production auth requires switching to `adapter-node` (follow-up).
+Auth endpoints (`/api/auth/*`, served by better-auth through `src/hooks.server.ts`) exist under `bun run dev` and the built Bun server. Verify with `GET /api/auth/ok` and `GET /api/auth/get-session`. Production needs the `TURSO_*`, `BETTER_AUTH_*` vars (see `.env.example`) and the auth tables (`bun run db:push`).
+
+## Deployment
+
+Ship `build/`, `package.json`, and `bun.lock`; runtime dependencies (`better-auth`, `drizzle-orm`, `@libsql/client`) are externalised, so run `bun install --production --frozen-lockfile` on the server. Start with `bun ./build` (default `PORT=3000`; see `.env.example` for `HOST`, `PORT`, proxy headers, and limits).
+
+`BETTER_AUTH_URL` must match the public origin. Behind TLS the adapter's default `https` assumption is correct; when serving plain HTTP directly, build with `ORIGIN=http://localhost:3000 bun run --bun build` (or configure the proxy headers at runtime). `ORIGIN` is intentionally ignored during `vite dev` so it cannot break the 5173 dev server.
