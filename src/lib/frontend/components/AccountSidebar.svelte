@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { signOutUser } from '#frontend/modules/auth/index.ts';
+
 	const imgPic = '/assets/d94d6.png';
 	const imgSeparator = '/assets/42c25.svg';
 	const imgIcon = '/assets/f0c09.svg';
@@ -247,10 +249,11 @@
 					<div class="relative h-[8px] w-full shrink-0" data-name="separator">
 						<img alt="" class="absolute inset-0 block size-full max-w-none" src={imgSeparator} />
 					</div>
-					<a
-						href="/login"
-						class="relative flex w-full shrink-0 content-stretch items-center gap-[8px] rounded-[6px] px-[12px] py-[10px] text-red-600 hover:bg-gray-50"
+					<button
+						type="button"
+						class="relative flex w-full shrink-0 cursor-pointer content-stretch items-center gap-[8px] rounded-[6px] px-[12px] py-[10px] text-left text-red-600 hover:bg-gray-50"
 						data-name="Flex Horizontal"
+						onclick={() => signOutUser()}
 					>
 						<div class="relative size-[20px] shrink-0" data-name="Icon">
 							<img alt="" class="absolute inset-0 block size-full max-w-none" src={imgIcon11} />
@@ -260,7 +263,7 @@
 						>
 							Logout
 						</p>
-					</a>
+					</button>
 				</div>
 			</div>
 		</div>

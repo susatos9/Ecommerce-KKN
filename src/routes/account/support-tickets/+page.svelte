@@ -1,6 +1,7 @@
 <script lang="ts">
 	import SiteHeader from '#lib/frontend/components/SiteHeader.svelte';
 	import SiteFooter from '#lib/frontend/components/SiteFooter.svelte';
+	import { signOutUser } from '#frontend/modules/auth/index.ts';
 	const imgPic = '/assets/d94d6.png';
 	const imgImage19 = '/assets/3cc20.png';
 	const imgImage13 = '/assets/ad1bf.png';
@@ -338,10 +339,11 @@
 										src={imgSeparator}
 									/>
 								</div>
-								<a
-									href="/account/support-tickets"
-									class="relative flex w-full shrink-0 content-stretch items-center gap-[8px] rounded-[6px] px-[12px] py-[10px] hover:bg-gray-50"
+								<button
+									type="button"
+									class="relative flex w-full shrink-0 cursor-pointer content-stretch items-center gap-[8px] rounded-[6px] px-[12px] py-[10px] text-left hover:bg-gray-50"
 									data-name="Flex Horizontal"
+									onclick={() => signOutUser()}
 								>
 									<div class="relative size-[20px] shrink-0" data-name="Icon">
 										<img
@@ -355,7 +357,7 @@
 									>
 										Logout
 									</p>
-								</a>
+								</button>
 							</div>
 						</div>
 					</div>

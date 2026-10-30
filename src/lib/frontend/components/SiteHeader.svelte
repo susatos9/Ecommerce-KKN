@@ -372,7 +372,7 @@
 
 		{#if mobileMenuOpen}
 			<div
-				class="animate-in slide-in-from-top mt-2 flex w-full flex-col gap-2 border-t border-[#e5e5e5] bg-white px-4 py-3 shadow-lg md:hidden"
+				class="mt-2 flex w-full animate-in flex-col gap-2 border-t border-[#e5e5e5] bg-white px-4 py-3 shadow-lg slide-in-from-top md:hidden"
 			>
 				<p class="px-2 pt-1 text-xs font-semibold tracking-wider text-gray-400 uppercase">
 					Catalog
